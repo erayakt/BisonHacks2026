@@ -9,8 +9,8 @@ The system replaces slow, linear screen reader navigation with spatial explorati
 ## Project Structure
 
 VisionMouse/
-├── Computer/        # Desktop application (Debug UI + Keyboard Menu)
-└── RaspberryPi/     # Hardware node (motion tracking + tactile/audio output + AI Processing)
+   -> Computer/        # Desktop application (Debug UI + Keyboard Menu)
+   -> RaspberryPi/     # Hardware node (motion tracking + tactile/audio output + AI Processing)
 
 ### Computer
 - Desktop UI (PySide6)
