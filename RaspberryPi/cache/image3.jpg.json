@@ -5,100 +5,258 @@
     {
       "index": 0,
       "factor": {
-        "title": "Humidity Intensity Gradient",
-        "description": "Represents the percentage of relative humidity. Low intensity corresponds to dry areas (e.g., red/orange regions with <30%), while high intensity corresponds to humid areas (e.g., dark green/blue regions with >60%). This can map to varying levels of tactile pressure or tone pitch.",
+        "title": "Humidity Percentage Gradient",
+        "description": "Represents the varying levels of average relative humidity across the United States. Low intensity corresponds to areas with lower percentage humidity (e.g., arid regions), while high intensity corresponds to areas with higher percentage humidity (e.g., coastal or humid inland regions). Can be mapped to pitch or vibration intensity.",
         "raw": {
-          "title": "Humidity Intensity Gradient",
-          "description": "Represents the percentage of relative humidity. Low intensity corresponds to dry areas (e.g., red/orange regions with <30%), while high intensity corresponds to humid areas (e.g., dark green/blue regions with >60%). This can map to varying levels of tactile pressure or tone pitch."
+          "title": "Humidity Percentage Gradient",
+          "description": "Represents the varying levels of average relative humidity across the United States. Low intensity corresponds to areas with lower percentage humidity (e.g., arid regions), while high intensity corresponds to areas with higher percentage humidity (e.g., coastal or humid inland regions). Can be mapped to pitch or vibration intensity."
         }
       },
       "grid_scoring": {
         "grid_map": {
-          "A1": 80,
-          "B1": 40,
-          "C1": 45,
-          "D1": 55,
-          "E1": 60,
-          "F1": 75,
-          "A2": 70,
-          "B2": 25,
-          "C2": 35,
-          "D2": 45,
-          "E2": 55,
-          "F2": 65,
-          "A3": 60,
-          "B3": 20,
-          "C3": 30,
-          "D3": 45,
-          "E3": 55,
-          "F3": 55,
-          "A4": 60,
-          "B4": 30,
-          "C4": 30,
-          "D4": 45,
-          "E4": 55,
-          "F4": 55,
-          "A5": 30,
-          "B5": 30,
-          "C5": 40,
-          "D5": 55,
-          "E5": 65,
-          "F5": 55,
-          "A6": 30,
-          "B6": 30,
-          "C6": 40,
-          "D6": 55,
-          "E6": 65,
-          "F6": 60
+          "A1": {
+            "intensity": 75,
+            "relevant": true
+          },
+          "B1": {
+            "intensity": 50,
+            "relevant": true
+          },
+          "C1": {
+            "intensity": 45,
+            "relevant": true
+          },
+          "D1": {
+            "intensity": 45,
+            "relevant": true
+          },
+          "E1": {
+            "intensity": 55,
+            "relevant": true
+          },
+          "F1": {
+            "intensity": 45,
+            "relevant": true
+          },
+          "A2": {
+            "intensity": 75,
+            "relevant": true
+          },
+          "B2": {
+            "intensity": 50,
+            "relevant": true
+          },
+          "C2": {
+            "intensity": 45,
+            "relevant": true
+          },
+          "D2": {
+            "intensity": 45,
+            "relevant": true
+          },
+          "E2": {
+            "intensity": 55,
+            "relevant": true
+          },
+          "F2": {
+            "intensity": 65,
+            "relevant": true
+          },
+          "A3": {
+            "intensity": 65,
+            "relevant": true
+          },
+          "B3": {
+            "intensity": 30,
+            "relevant": true
+          },
+          "C3": {
+            "intensity": 35,
+            "relevant": true
+          },
+          "D3": {
+            "intensity": 55,
+            "relevant": true
+          },
+          "E3": {
+            "intensity": 55,
+            "relevant": true
+          },
+          "F3": {
+            "intensity": 65,
+            "relevant": true
+          },
+          "A4": {
+            "intensity": 70,
+            "relevant": true
+          },
+          "B4": {
+            "intensity": 35,
+            "relevant": true
+          },
+          "C4": {
+            "intensity": 35,
+            "relevant": true
+          },
+          "D4": {
+            "intensity": 55,
+            "relevant": true
+          },
+          "E4": {
+            "intensity": 65,
+            "relevant": true
+          },
+          "F4": {
+            "intensity": 65,
+            "relevant": true
+          },
+          "A5": {
+            "intensity": 0,
+            "relevant": false
+          },
+          "B5": {
+            "intensity": 0,
+            "relevant": false
+          },
+          "C5": {
+            "intensity": 55,
+            "relevant": true
+          },
+          "D5": {
+            "intensity": 65,
+            "relevant": true
+          },
+          "E5": {
+            "intensity": 65,
+            "relevant": true
+          },
+          "F5": {
+            "intensity": 75,
+            "relevant": true
+          },
+          "A6": {
+            "intensity": 0,
+            "relevant": false
+          },
+          "B6": {
+            "intensity": 0,
+            "relevant": false
+          },
+          "C6": {
+            "intensity": 0,
+            "relevant": false
+          },
+          "D6": {
+            "intensity": 0,
+            "relevant": false
+          },
+          "E6": {
+            "intensity": 0,
+            "relevant": false
+          },
+          "F6": {
+            "intensity": 0,
+            "relevant": false
+          }
         },
-        "grid_matrix": [
+        "grid_intensity_matrix": [
           [
-            80,
-            40,
+            75,
+            50,
+            45,
             45,
             55,
-            60,
-            75
+            45
           ],
           [
-            70,
-            25,
-            35,
+            75,
+            50,
+            45,
             45,
             55,
             65
           ],
           [
-            60,
-            20,
+            65,
             30,
-            45,
+            35,
             55,
-            55
+            55,
+            65
           ],
           [
-            60,
-            30,
-            30,
-            45,
-            55,
-            55
-          ],
-          [
-            30,
-            30,
-            40,
+            70,
+            35,
+            35,
             55,
             65,
-            55
+            65
           ],
           [
-            30,
-            30,
-            40,
+            0,
+            0,
             55,
             65,
-            60
+            65,
+            75
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        ],
+        "grid_relevance_matrix": [
+          [
+            true,
+            true,
+            true,
+            true,
+            true,
+            true
+          ],
+          [
+            true,
+            true,
+            true,
+            true,
+            true,
+            true
+          ],
+          [
+            true,
+            true,
+            true,
+            true,
+            true,
+            true
+          ],
+          [
+            true,
+            true,
+            true,
+            true,
+            true,
+            true
+          ],
+          [
+            false,
+            false,
+            true,
+            true,
+            true,
+            true
+          ],
+          [
+            false,
+            false,
+            false,
+            false,
+            false,
+            false
           ]
         ]
       },
@@ -107,100 +265,258 @@
     {
       "index": 1,
       "factor": {
-        "title": "Color Saturation Variation",
-        "description": "Measures the vividness of the colors used to depict humidity levels. Areas with more saturated colors (e.g., the bright red and yellow) indicate distinct humidity ranges, while desaturated or lighter greens represent transitional or lower humidity zones. This can be used to control vibration intensity.",
+        "title": "Color Saturation Intensity",
+        "description": "Measures the intensity of the color saturation used to depict humidity levels. Areas with muted or no color (e.g., landmass background) have low saturation, while areas with vibrant colors (representing specific humidity ranges) have high saturation. This can be mapped to texture roughness.",
         "raw": {
-          "title": "Color Saturation Variation",
-          "description": "Measures the vividness of the colors used to depict humidity levels. Areas with more saturated colors (e.g., the bright red and yellow) indicate distinct humidity ranges, while desaturated or lighter greens represent transitional or lower humidity zones. This can be used to control vibration intensity."
+          "title": "Color Saturation Intensity",
+          "description": "Measures the intensity of the color saturation used to depict humidity levels. Areas with muted or no color (e.g., landmass background) have low saturation, while areas with vibrant colors (representing specific humidity ranges) have high saturation. This can be mapped to texture roughness."
         }
       },
       "grid_scoring": {
         "grid_map": {
-          "A1": 70,
-          "B1": 50,
-          "C1": 50,
-          "D1": 40,
-          "E1": 40,
-          "F1": 50,
-          "A2": 90,
-          "B2": 90,
-          "C2": 50,
-          "D2": 40,
-          "E2": 40,
-          "F2": 50,
-          "A3": 70,
-          "B3": 60,
-          "C3": 50,
-          "D3": 40,
-          "E3": 40,
-          "F3": 50,
-          "A4": 65,
-          "B4": 60,
-          "C4": 50,
-          "D4": 40,
-          "E4": 40,
-          "F4": 50,
-          "A5": 40,
-          "B5": 40,
-          "C5": 50,
-          "D5": 50,
-          "E5": 50,
-          "F5": 50,
-          "A6": 10,
-          "B6": 10,
-          "C6": 10,
-          "D6": 10,
-          "E6": 10,
-          "F6": 10
+          "A1": {
+            "intensity": 85,
+            "relevant": true
+          },
+          "B1": {
+            "intensity": 60,
+            "relevant": true
+          },
+          "C1": {
+            "intensity": 35,
+            "relevant": true
+          },
+          "D1": {
+            "intensity": 30,
+            "relevant": true
+          },
+          "E1": {
+            "intensity": 40,
+            "relevant": true
+          },
+          "F1": {
+            "intensity": 60,
+            "relevant": true
+          },
+          "A2": {
+            "intensity": 95,
+            "relevant": true
+          },
+          "B2": {
+            "intensity": 85,
+            "relevant": true
+          },
+          "C2": {
+            "intensity": 40,
+            "relevant": true
+          },
+          "D2": {
+            "intensity": 35,
+            "relevant": true
+          },
+          "E2": {
+            "intensity": 45,
+            "relevant": true
+          },
+          "F2": {
+            "intensity": 65,
+            "relevant": true
+          },
+          "A3": {
+            "intensity": 80,
+            "relevant": true
+          },
+          "B3": {
+            "intensity": 40,
+            "relevant": true
+          },
+          "C3": {
+            "intensity": 30,
+            "relevant": true
+          },
+          "D3": {
+            "intensity": 35,
+            "relevant": true
+          },
+          "E3": {
+            "intensity": 50,
+            "relevant": true
+          },
+          "F3": {
+            "intensity": 65,
+            "relevant": true
+          },
+          "A4": {
+            "intensity": 70,
+            "relevant": true
+          },
+          "B4": {
+            "intensity": 30,
+            "relevant": true
+          },
+          "C4": {
+            "intensity": 25,
+            "relevant": true
+          },
+          "D4": {
+            "intensity": 30,
+            "relevant": true
+          },
+          "E4": {
+            "intensity": 55,
+            "relevant": true
+          },
+          "F4": {
+            "intensity": 65,
+            "relevant": true
+          },
+          "A5": {
+            "intensity": 30,
+            "relevant": true
+          },
+          "B5": {
+            "intensity": 25,
+            "relevant": true
+          },
+          "C5": {
+            "intensity": 25,
+            "relevant": true
+          },
+          "D5": {
+            "intensity": 40,
+            "relevant": true
+          },
+          "E5": {
+            "intensity": 55,
+            "relevant": true
+          },
+          "F5": {
+            "intensity": 65,
+            "relevant": true
+          },
+          "A6": {
+            "intensity": 0,
+            "relevant": false
+          },
+          "B6": {
+            "intensity": 15,
+            "relevant": false
+          },
+          "C6": {
+            "intensity": 10,
+            "relevant": false
+          },
+          "D6": {
+            "intensity": 10,
+            "relevant": false
+          },
+          "E6": {
+            "intensity": 10,
+            "relevant": false
+          },
+          "F6": {
+            "intensity": 10,
+            "relevant": false
+          }
         },
-        "grid_matrix": [
+        "grid_intensity_matrix": [
+          [
+            85,
+            60,
+            35,
+            30,
+            40,
+            60
+          ],
+          [
+            95,
+            85,
+            40,
+            35,
+            45,
+            65
+          ],
+          [
+            80,
+            40,
+            30,
+            35,
+            50,
+            65
+          ],
           [
             70,
-            50,
-            50,
-            40,
-            40,
-            50
+            30,
+            25,
+            30,
+            55,
+            65
           ],
           [
-            90,
-            90,
-            50,
+            30,
+            25,
+            25,
             40,
-            40,
-            50
+            55,
+            65
           ],
           [
-            70,
-            60,
-            50,
-            40,
-            40,
-            50
-          ],
-          [
-            65,
-            60,
-            50,
-            40,
-            40,
-            50
-          ],
-          [
-            40,
-            40,
-            50,
-            50,
-            50,
-            50
-          ],
-          [
-            10,
-            10,
+            0,
+            15,
             10,
             10,
             10,
             10
+          ]
+        ],
+        "grid_relevance_matrix": [
+          [
+            true,
+            true,
+            true,
+            true,
+            true,
+            true
+          ],
+          [
+            true,
+            true,
+            true,
+            true,
+            true,
+            true
+          ],
+          [
+            true,
+            true,
+            true,
+            true,
+            true,
+            true
+          ],
+          [
+            true,
+            true,
+            true,
+            true,
+            true,
+            true
+          ],
+          [
+            true,
+            true,
+            true,
+            true,
+            true,
+            true
+          ],
+          [
+            false,
+            false,
+            false,
+            false,
+            false,
+            false
           ]
         ]
       },
@@ -210,99 +526,517 @@
       "index": 2,
       "factor": {
         "title": "Contour Line Density",
-        "description": "Represents how closely the lines indicating specific humidity percentages are spaced. Dense lines indicate rapid changes in humidity over a short distance, while sparse lines indicate gradual changes. This can be mapped to frequency of auditory pulses or texture roughness.",
+        "description": "Indicates the closeness of the isolines representing specific humidity percentages. Areas with widely spaced contour lines represent gradual changes in humidity (low density), while areas with closely packed lines represent rapid changes (high density). This can be mapped to a subtle tactile feedback change.",
         "raw": {
           "title": "Contour Line Density",
-          "description": "Represents how closely the lines indicating specific humidity percentages are spaced. Dense lines indicate rapid changes in humidity over a short distance, while sparse lines indicate gradual changes. This can be mapped to frequency of auditory pulses or texture roughness."
+          "description": "Indicates the closeness of the isolines representing specific humidity percentages. Areas with widely spaced contour lines represent gradual changes in humidity (low density), while areas with closely packed lines represent rapid changes (high density). This can be mapped to a subtle tactile feedback change."
         }
       },
       "grid_scoring": {
         "grid_map": {
-          "A1": 70,
-          "B1": 60,
-          "C1": 50,
-          "D1": 40,
-          "E1": 40,
-          "F1": 50,
-          "A2": 80,
-          "B2": 80,
-          "C2": 40,
-          "D2": 40,
-          "E2": 40,
-          "F2": 50,
-          "A3": 70,
-          "B3": 50,
-          "C3": 30,
-          "D3": 30,
-          "E3": 30,
-          "F3": 40,
-          "A4": 50,
-          "B4": 50,
-          "C4": 30,
-          "D4": 30,
-          "E4": 30,
-          "F4": 40,
-          "A5": 30,
-          "B5": 30,
-          "C5": 30,
-          "D5": 30,
-          "E5": 30,
-          "F5": 30,
-          "A6": 10,
-          "B6": 10,
-          "C6": 10,
-          "D6": 10,
-          "E6": 10,
-          "F6": 10
+          "A1": {
+            "intensity": 70,
+            "relevant": true
+          },
+          "B1": {
+            "intensity": 40,
+            "relevant": true
+          },
+          "C1": {
+            "intensity": 30,
+            "relevant": true
+          },
+          "D1": {
+            "intensity": 20,
+            "relevant": true
+          },
+          "E1": {
+            "intensity": 15,
+            "relevant": true
+          },
+          "F1": {
+            "intensity": 10,
+            "relevant": true
+          },
+          "A2": {
+            "intensity": 80,
+            "relevant": true
+          },
+          "B2": {
+            "intensity": 60,
+            "relevant": true
+          },
+          "C2": {
+            "intensity": 35,
+            "relevant": true
+          },
+          "D2": {
+            "intensity": 20,
+            "relevant": true
+          },
+          "E2": {
+            "intensity": 15,
+            "relevant": true
+          },
+          "F2": {
+            "intensity": 10,
+            "relevant": true
+          },
+          "A3": {
+            "intensity": 85,
+            "relevant": true
+          },
+          "B3": {
+            "intensity": 55,
+            "relevant": true
+          },
+          "C3": {
+            "intensity": 30,
+            "relevant": true
+          },
+          "D3": {
+            "intensity": 20,
+            "relevant": true
+          },
+          "E3": {
+            "intensity": 15,
+            "relevant": true
+          },
+          "F3": {
+            "intensity": 10,
+            "relevant": true
+          },
+          "A4": {
+            "intensity": 70,
+            "relevant": true
+          },
+          "B4": {
+            "intensity": 45,
+            "relevant": true
+          },
+          "C4": {
+            "intensity": 30,
+            "relevant": true
+          },
+          "D4": {
+            "intensity": 20,
+            "relevant": true
+          },
+          "E4": {
+            "intensity": 15,
+            "relevant": true
+          },
+          "F4": {
+            "intensity": 10,
+            "relevant": true
+          },
+          "A5": {
+            "intensity": 10,
+            "relevant": true
+          },
+          "B5": {
+            "intensity": 15,
+            "relevant": true
+          },
+          "C5": {
+            "intensity": 20,
+            "relevant": true
+          },
+          "D5": {
+            "intensity": 20,
+            "relevant": true
+          },
+          "E5": {
+            "intensity": 15,
+            "relevant": true
+          },
+          "F5": {
+            "intensity": 10,
+            "relevant": true
+          },
+          "A6": {
+            "intensity": 0,
+            "relevant": false
+          },
+          "B6": {
+            "intensity": 0,
+            "relevant": false
+          },
+          "C6": {
+            "intensity": 0,
+            "relevant": false
+          },
+          "D6": {
+            "intensity": 0,
+            "relevant": false
+          },
+          "E6": {
+            "intensity": 0,
+            "relevant": false
+          },
+          "F6": {
+            "intensity": 0,
+            "relevant": false
+          }
         },
-        "grid_matrix": [
+        "grid_intensity_matrix": [
           [
             70,
-            60,
-            50,
             40,
-            40,
-            50
-          ],
-          [
-            80,
-            80,
-            40,
-            40,
-            40,
-            50
-          ],
-          [
-            70,
-            50,
             30,
-            30,
-            30,
-            40
-          ],
-          [
-            50,
-            50,
-            30,
-            30,
-            30,
-            40
-          ],
-          [
-            30,
-            30,
-            30,
-            30,
-            30,
-            30
-          ],
-          [
-            10,
-            10,
-            10,
-            10,
-            10,
+            20,
+            15,
             10
+          ],
+          [
+            80,
+            60,
+            35,
+            20,
+            15,
+            10
+          ],
+          [
+            85,
+            55,
+            30,
+            20,
+            15,
+            10
+          ],
+          [
+            70,
+            45,
+            30,
+            20,
+            15,
+            10
+          ],
+          [
+            10,
+            15,
+            20,
+            20,
+            15,
+            10
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        ],
+        "grid_relevance_matrix": [
+          [
+            true,
+            true,
+            true,
+            true,
+            true,
+            true
+          ],
+          [
+            true,
+            true,
+            true,
+            true,
+            true,
+            true
+          ],
+          [
+            true,
+            true,
+            true,
+            true,
+            true,
+            true
+          ],
+          [
+            true,
+            true,
+            true,
+            true,
+            true,
+            true
+          ],
+          [
+            true,
+            true,
+            true,
+            true,
+            true,
+            true
+          ],
+          [
+            false,
+            false,
+            false,
+            false,
+            false,
+            false
+          ]
+        ]
+      },
+      "error": null
+    },
+    {
+      "index": 3,
+      "factor": {
+        "title": "Color Hue Shift",
+        "description": "Represents the change in color used to represent different humidity ranges. The hue shifts from red (low humidity) through yellow and various shades of green (medium humidity) to blue (high humidity). This can be mapped to a changing audio tone.",
+        "raw": {
+          "title": "Color Hue Shift",
+          "description": "Represents the change in color used to represent different humidity ranges. The hue shifts from red (low humidity) through yellow and various shades of green (medium humidity) to blue (high humidity). This can be mapped to a changing audio tone."
+        }
+      },
+      "grid_scoring": {
+        "grid_map": {
+          "A1": {
+            "intensity": 70,
+            "relevant": true
+          },
+          "B1": {
+            "intensity": 50,
+            "relevant": true
+          },
+          "C1": {
+            "intensity": 30,
+            "relevant": true
+          },
+          "D1": {
+            "intensity": 30,
+            "relevant": true
+          },
+          "E1": {
+            "intensity": 40,
+            "relevant": true
+          },
+          "F1": {
+            "intensity": 60,
+            "relevant": true
+          },
+          "A2": {
+            "intensity": 85,
+            "relevant": true
+          },
+          "B2": {
+            "intensity": 75,
+            "relevant": true
+          },
+          "C2": {
+            "intensity": 35,
+            "relevant": true
+          },
+          "D2": {
+            "intensity": 30,
+            "relevant": true
+          },
+          "E2": {
+            "intensity": 45,
+            "relevant": true
+          },
+          "F2": {
+            "intensity": 65,
+            "relevant": true
+          },
+          "A3": {
+            "intensity": 60,
+            "relevant": true
+          },
+          "B3": {
+            "intensity": 40,
+            "relevant": true
+          },
+          "C3": {
+            "intensity": 30,
+            "relevant": true
+          },
+          "D3": {
+            "intensity": 30,
+            "relevant": true
+          },
+          "E3": {
+            "intensity": 50,
+            "relevant": true
+          },
+          "F3": {
+            "intensity": 70,
+            "relevant": true
+          },
+          "A4": {
+            "intensity": 0,
+            "relevant": false
+          },
+          "B4": {
+            "intensity": 30,
+            "relevant": true
+          },
+          "C4": {
+            "intensity": 25,
+            "relevant": true
+          },
+          "D4": {
+            "intensity": 30,
+            "relevant": true
+          },
+          "E4": {
+            "intensity": 55,
+            "relevant": true
+          },
+          "F4": {
+            "intensity": 70,
+            "relevant": true
+          },
+          "A5": {
+            "intensity": 0,
+            "relevant": false
+          },
+          "B5": {
+            "intensity": 0,
+            "relevant": false
+          },
+          "C5": {
+            "intensity": 20,
+            "relevant": true
+          },
+          "D5": {
+            "intensity": 30,
+            "relevant": true
+          },
+          "E5": {
+            "intensity": 60,
+            "relevant": true
+          },
+          "F5": {
+            "intensity": 65,
+            "relevant": true
+          },
+          "A6": {
+            "intensity": 0,
+            "relevant": false
+          },
+          "B6": {
+            "intensity": 0,
+            "relevant": false
+          },
+          "C6": {
+            "intensity": 0,
+            "relevant": false
+          },
+          "D6": {
+            "intensity": 0,
+            "relevant": false
+          },
+          "E6": {
+            "intensity": 0,
+            "relevant": false
+          },
+          "F6": {
+            "intensity": 90,
+            "relevant": true
+          }
+        },
+        "grid_intensity_matrix": [
+          [
+            70,
+            50,
+            30,
+            30,
+            40,
+            60
+          ],
+          [
+            85,
+            75,
+            35,
+            30,
+            45,
+            65
+          ],
+          [
+            60,
+            40,
+            30,
+            30,
+            50,
+            70
+          ],
+          [
+            0,
+            30,
+            25,
+            30,
+            55,
+            70
+          ],
+          [
+            0,
+            0,
+            20,
+            30,
+            60,
+            65
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            90
+          ]
+        ],
+        "grid_relevance_matrix": [
+          [
+            true,
+            true,
+            true,
+            true,
+            true,
+            true
+          ],
+          [
+            true,
+            true,
+            true,
+            true,
+            true,
+            true
+          ],
+          [
+            true,
+            true,
+            true,
+            true,
+            true,
+            true
+          ],
+          [
+            false,
+            true,
+            true,
+            true,
+            true,
+            true
+          ],
+          [
+            false,
+            false,
+            true,
+            true,
+            true,
+            true
+          ],
+          [
+            false,
+            false,
+            false,
+            false,
+            false,
+            true
           ]
         ]
       },
@@ -310,8 +1044,8 @@
     }
   ],
   "meta": {
-    "num_factors": 3,
-    "duration_sec": 9.8553
+    "num_factors": 4,
+    "duration_sec": 17.0583
   },
   "error": null
 }

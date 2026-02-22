@@ -40,16 +40,17 @@ class GridScoringAgent(ImageAgent):
             "You are an expert visual accessibility AI designed to map images to tactile/audio feedback grids. "
             "The user will provide an image that has a 6x6 coordinate grid (A1 to F6) visually overlaid on it. "
             "You will also be given a specific 'Interest Factor' to look for.\n\n"
-            "Your task is to evaluate EVERY single cell in the 6x6 grid and assign it a score from 0 to 100 based "
-            "on the intensity, density, or presence of the specified Interest Factor in that cell.\n"
-            "- 0 means the factor is entirely absent or at its lowest possible intensity.\n"
-            "- 100 means the factor is at its absolute maximum intensity.\n\n"
+            "Your task is to evaluate EVERY single cell in the 6x6 grid and output TWO things per cell:\n"
+            "1) intensity: an integer 0 to 100 describing how strong the factor is in that cell.\n"
+            "2) relevant: a boolean indicating whether that cell is actually part of the meaningful region for the factor.\n\n"
+            "Example: If the factor is humidity on a map of the USA, ocean areas or outside the border are NOT relevant (relevant=false).\n"
+            "- If relevant is false, intensity should still be an int 0..100, but it will be ignored by downstream tactile logic.\n\n"
             "Return ONLY valid JSON. Do not include markdown or extra text.\n"
             "You MUST return exactly one of these schemas:\n\n"
             "Schema A (preferred):\n"
-            '{ "grid_values": { "A1": 0, "A2": 10, ..., "F6": 45 } }\n\n'
+            '{"grid_values": {"A1": {"intensity": 0, "relevant": true}, "A2": {"intensity": 10, "relevant": false}, ..., "F6": {"intensity": 45, "relevant": true}}}\n\n'
             "Schema B (also accepted):\n"
-            '{ "A1": 0, "A2": 10, ..., "F6": 45 }\n'
+            '{"A1": {"intensity": 0, "relevant": true}, "A2": {"intensity": 10, "relevant": false}, ..., "F6": {"intensity": 45, "relevant": true}}\n'
         )
         super().__init__(
             model_name=model_name,
@@ -145,16 +146,17 @@ class GridScoringAgent(ImageAgent):
 
         factor_title = factor.get("title", "Unknown Factor")
         factor_desc = factor.get("description", "No description provided.")
-
         task_prompt = (
-            f"Analyze the attached image based strictly on this Interest Factor:\n"
-            f"TITLE: {factor_title}\n"
-            f"DESCRIPTION: {factor_desc}\n\n"
-            "Look at the visual 6x6 grid overlaid on the image. Assign a score from 0 to 100 for each cell "
-            "(A1 through F6) based on this factor.\n"
-            "Return ONLY valid JSON, no markdown and no commentary.\n"
-            'Use schema: { "grid_values": { "A1": 0, ..., "F6": 0 } } '
-            "or a flat dict { \"A1\": 0, ..., \"F6\": 0 }."
+            f"Analyze the attached image based strictly on this Interest Factor:\\n"
+            f"TITLE: {factor_title}\\n"
+            f"DESCRIPTION: {factor_desc}\\n\\n"
+            "Look at the visual 6x6 grid overlaid on the image. For EVERY cell (A1 through F6), output:\\n"
+            "- intensity: integer 0..100 (how strong the factor is in that cell)\\n"
+            "- relevant: boolean (true if the cell is part of the meaningful region for the factor; false if it is outside/irrelevant)\\n\\n"
+            "Important: If a cell is ocean/outside borders/blank background/etc. and does not meaningfully belong to the subject region, set relevant=false.\\n"
+            "Return ONLY valid JSON, no markdown and no commentary.\\n"
+            'Use schema: {"grid_values": {"A1": {"intensity": 0, "relevant": true}, ..., "F6": {"intensity": 0, "relevant": true}}} '
+            'or a flat dict {"A1": {"intensity": 0, "relevant": true}, ..., "F6": {"intensity": 0, "relevant": true}}.'
         )
 
         final_prompt = custom_prompt or task_prompt
@@ -168,13 +170,18 @@ class GridScoringAgent(ImageAgent):
             raw_obj = self._safe_json_parse(text)
             grid_map_raw = self._extract_grid_map(raw_obj)
             grid_map = self._validate_and_fill_grid(grid_map_raw)
-            grid_matrix = self._map_to_matrix(grid_map)
+            intensity_matrix = self._map_to_intensity_matrix(grid_map)
+            relevance_matrix = self._map_to_relevance_matrix(grid_map)
 
             if return_format == "matrix":
-                return grid_matrix
+                return intensity_matrix
             if return_format == "map":
                 return grid_map
-            return {"grid_map": grid_map, "grid_matrix": grid_matrix}
+            return {
+                "grid_map": grid_map,
+                "grid_intensity_matrix": intensity_matrix,
+                "grid_relevance_matrix": relevance_matrix,
+            }
 
         finally:
             if os.path.exists(temp_img_path):
@@ -183,36 +190,39 @@ class GridScoringAgent(ImageAgent):
     # --------------------------- Conversions ---------------------------
 
     @classmethod
-    def _map_to_matrix(cls, grid_map: Dict[str, int]) -> List[List[int]]:
+    def _map_to_intensity_matrix(cls, grid_map: Dict[str, Any]) -> List[List[int]]:
         """
-        Convert {"A1":..,"F6":..} -> 6x6 matrix:
+        Convert {"A1": {"intensity":..,"relevant":..}, ...} -> 6x6 matrix of intensity ints.
           - row 0 is row 1 (A1..F1)
           - row 5 is row 6 (A6..F6)
         """
         matrix: List[List[int]] = []
         for r in range(1, cls.ROWS + 1):
-            row_vals = []
+            row_vals: List[int] = []
             for c in cls.COL_LABELS:
-                row_vals.append(int(grid_map.get(f"{c}{r}", 0)))
+                cell = f"{c}{r}"
+                payload = grid_map.get(cell, {})
+                intensity, _rel = cls._coerce_cell_payload(payload)
+                row_vals.append(intensity)
             matrix.append(row_vals)
         return matrix
 
     @classmethod
-    def _matrix_to_map(cls, matrix: List[List[Any]]) -> Dict[str, int]:
+    def _map_to_relevance_matrix(cls, grid_map: Dict[str, Any]) -> List[List[bool]]:
         """
-        Convert 6x6 matrix -> {"A1":..,"F6":..}.
-        If matrix shape is wrong, missing values default to 0.
+        Convert {"A1": {"intensity":..,"relevant":..}, ...} -> 6x6 matrix of relevance booleans.
         """
-        out: Dict[str, int] = {}
+        matrix: List[List[bool]] = []
         for r in range(1, cls.ROWS + 1):
-            for c_idx, c in enumerate(cls.COL_LABELS):
-                v = 0
-                try:
-                    v = matrix[r - 1][c_idx]
-                except Exception:
-                    v = 0
-                out[f"{c}{r}"] = cls._coerce_score(v)
-        return out
+            row_vals: List[bool] = []
+            for c in cls.COL_LABELS:
+                cell = f"{c}{r}"
+                payload = grid_map.get(cell, {})
+                _intensity, rel = cls._coerce_cell_payload(payload)
+                row_vals.append(bool(rel))
+            matrix.append(row_vals)
+        return matrix
+
 
     # --------------------------- Parsing + Validation ---------------------------
 
@@ -306,9 +316,56 @@ class GridScoringAgent(ImageAgent):
         return 0
 
     @classmethod
-    def _validate_and_fill_grid(cls, grid_values: Dict[str, Any]) -> Dict[str, int]:
-        """Return exactly 36 keys A1..F6, ints 0..100. Missing/invalid -> 0."""
-        cleaned: Dict[str, int] = {}
+    def _coerce_relevant(cls, v: Any) -> bool:
+        """Coerce value into a boolean. Defaults to True when unknown."""
+        if v is None:
+            return True
+        if isinstance(v, bool):
+            return v
+        if isinstance(v, (int, float)):
+            return bool(v)
+        if isinstance(v, str):
+            s = v.strip().lower()
+            if s in ("false", "0", "no", "n", "off", "irrelevant", "unrelated"):
+                return False
+            if s in ("true", "1", "yes", "y", "on", "relevant", "related"):
+                return True
+        return True
+
+    @classmethod
+    def _coerce_cell_payload(cls, payload: Any) -> Tuple[int, bool]:
+        """
+        Normalize a per-cell payload into (intensity:int[0..100], relevant:bool).
+        Accepted shapes:
+          - {"intensity": 10, "relevant": true}
+          - {"score": 10, "is_relevant": false} (best-effort aliases)
+          - [10, true] / (10, true)
+          - 10 / "10"  -> intensity=10, relevant=True
+        """
+        if isinstance(payload, dict):
+            intensity = cls._coerce_score(
+                payload.get("intensity", payload.get("score", payload.get("value", 0)))
+            )
+            rel_val = payload.get("relevant", payload.get("is_relevant", payload.get("related")))
+            relevant = cls._coerce_relevant(rel_val)
+            return intensity, relevant
+
+        if isinstance(payload, (list, tuple)) and len(payload) >= 2:
+            intensity = cls._coerce_score(payload[0])
+            relevant = cls._coerce_relevant(payload[1])
+            return intensity, relevant
+
+        # scalar fallback
+        return cls._coerce_score(payload), True
+
+    @classmethod
+    def _validate_and_fill_grid(cls, grid_values: Dict[str, Any]) -> Dict[str, Dict[str, Any]]:
+        """
+        Return exactly 36 keys A1..F6, each as:
+          {"intensity": int 0..100, "relevant": bool}
+        Missing/invalid -> intensity=0, relevant=True.
+        """
+        cleaned: Dict[str, Dict[str, Any]] = {}
         valid_keys = cls._valid_cell_keys_set()
 
         normalized: Dict[str, Any] = {}
@@ -323,7 +380,8 @@ class GridScoringAgent(ImageAgent):
         for r in range(1, cls.ROWS + 1):
             for c in cls.COL_LABELS:
                 key = f"{c}{r}"
-                cleaned[key] = cls._coerce_score(normalized.get(key, 0))
+                intensity, relevant = cls._coerce_cell_payload(normalized.get(key, {}))
+                cleaned[key] = {"intensity": intensity, "relevant": bool(relevant)}
 
         return cleaned
 

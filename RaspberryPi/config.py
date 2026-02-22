@@ -26,7 +26,7 @@ class MouseConfig:
     scale_y: float = 1.0
 
     # Mouse is physically rotated 180° => reverse both axes
-    rotate_180: bool = True
+    rotate_180: bool = False
 
 
 @dataclass(frozen=True)

@@ -14,6 +14,7 @@ from inputs.mouse_input import MouseInput
 from network.ws_client import WebSocketClient, WebSocketClientConfig
 from outputs.audio_output import LoopingWavOutput
 from outputs.tone_output import ToneOutput  # fallback if WAV backend fails
+from outputs.tactile_output import TactileOutput
 
 
 logging.basicConfig(
@@ -60,13 +61,73 @@ def load_or_run_image_analysis(image_path: str, *, cache_dir: str, force: bool =
     return result
 
 
-def pick_grid_map(result: Dict[str, Any], factor_index: int) -> Optional[Dict[str, int]]:
+def pick_grid_maps(result: Dict[str, Any], factor_index: int) -> Tuple[Dict[str, int], Dict[str, bool]]:
     """
-    Extract a {"A1":..,"F6":..} map from ImageAnalyzer output for the chosen factor.
+    Extract intensity + relevance maps from ImageAnalyzer output for the chosen factor.
+
+    Returns:
+      - intensity_map: {"A1": 0..100, ..., "F6": 0..100}
+      - relevance_map: {"A1": bool, ..., "F6": bool}
+    Backward compatible with older caches where grid_map values are ints.
     """
     factors = result.get("interest_factors") or []
     if not isinstance(factors, list) or not factors:
-        return None
+        return ({}, {})
+
+    # Try requested index first, then fallback to first valid map
+    indices = [factor_index] + [i for i in range(len(factors)) if i != factor_index]
+    for idx in indices:
+        if idx < 0 or idx >= len(factors):
+            continue
+        entry = factors[idx]
+        if not isinstance(entry, dict):
+            continue
+        scoring = entry.get("grid_scoring")
+        if isinstance(scoring, dict):
+            grid_map = scoring.get("grid_map")
+            if isinstance(grid_map, dict) and grid_map:
+                intensity_out: Dict[str, int] = {}
+                relevance_out: Dict[str, bool] = {}
+
+                for k, v in grid_map.items():
+                    cell = str(k).strip().upper()
+                    if len(cell) < 2:
+                        continue
+
+                    # New format: per-cell dict {"intensity":..,"relevant":..}
+                    if isinstance(v, dict):
+                        try:
+                            iv = int(v.get("intensity", 0))
+                        except Exception:
+                            iv = 0
+                        rel = bool(v.get("relevant", True))
+                    else:
+                        # Old format: int score only
+                        try:
+                            iv = int(v)
+                        except Exception:
+                            iv = 0
+                        rel = True
+
+                    if iv < 0:
+                        iv = 0
+                    if iv > 100:
+                        iv = 100
+
+                    intensity_out[cell] = iv
+                    relevance_out[cell] = rel
+
+                # Ensure all 36 keys exist
+                for r in range(1, ROWS + 1):
+                    for c in COL_LABELS:
+                        key = f"{c}{r}"
+                        intensity_out.setdefault(key, 0)
+                        relevance_out.setdefault(key, True)
+
+                return intensity_out, relevance_out
+
+    return ({}, {})
+
 
     # Try requested index first, then fallback to first valid map
     indices = [factor_index] + [i for i in range(len(factors)) if i != factor_index]
@@ -129,11 +190,12 @@ async def run() -> None:
     factor_index = int(os.getenv("FACTOR_INDEX", str(IMAGE_CONFIG.factor_index)))
 
     analysis = load_or_run_image_analysis(image_path, cache_dir=cache_dir, force=False)
-    grid_map = pick_grid_map(analysis, factor_index=factor_index)
+    intensity_map, relevance_map = pick_grid_maps(analysis, factor_index=factor_index)
 
-    if not grid_map:
+    if not intensity_map:
         logger.warning("No grid_map found in analysis result. Audio feedback will be silent.")
-        grid_map = {f"{c}{r}": 0 for r in range(1, ROWS + 1) for c in COL_LABELS}
+        intensity_map = {f"{c}{r}": 0 for r in range(1, ROWS + 1) for c in COL_LABELS}
+        relevance_map = {f"{c}{r}": True for r in range(1, ROWS + 1) for c in COL_LABELS}
 
     # Audio feedback: loop a WAV file and adjust intensity based on cell score
     _audio_backend = "wav"
@@ -175,7 +237,18 @@ async def run() -> None:
         _audio_backend = "tone"
         logger.info("Audio backend: sine tone")
 
-    # ---------------------------
+    
+    # Tactile feedback: binary touch based on cell relevance (unrelated -> touch(1.0), related -> touch(0.0))
+    tactile: Optional[TactileOutput] = None
+    try:
+        tactile = TactileOutput()
+        tactile.initialize()  # reset to not-touching at startup
+        logger.info("TactileOutput initialized and reset.")
+    except Exception as e:
+        tactile = None
+        logger.warning("TactileOutput disabled (init failed): %s", e)
+
+# ---------------------------
     # 1) Normal runtime: mouse + websocket + audio feedback
     # ---------------------------
     mouse = MouseInput(MOUSE_CONFIG)
@@ -193,6 +266,8 @@ async def run() -> None:
 
     last_cell: Optional[str] = None
     last_level: Optional[int] = None
+    last_tact_cell: Optional[str] = None
+    last_tact_strength: Optional[float] = None
 
     try:
         last_sent = 0.0
@@ -220,7 +295,23 @@ async def run() -> None:
 
                 # 2) Local audio feedback based on current cell score (0..100)
                 cell, _, _ = cell_from_xy(x, y, w=MOUSE_CONFIG.max_x, h=MOUSE_CONFIG.max_y)
-                level = int(grid_map.get(cell, 0))
+                level = int(intensity_map.get(cell, 0))
+
+                # Tactile feedback uses relevance: unrelated -> touch(1.0), related -> touch(0.0)
+                relevant = bool(relevance_map.get(cell, True))
+                tact_strength = 1.0 if (not relevant) else 0.0
+                if tactile is not None and (cell != last_tact_cell or tact_strength != last_tact_strength):
+                    try:
+                        tactile.touch(tact_strength)
+                        last_tact_cell = cell
+                        last_tact_strength = tact_strength
+                    except Exception as e:
+                        logger.warning("TactileOutput error; disabling tactile feedback: %s", e)
+                        try:
+                            tactile.cleanup()
+                        except Exception:
+                            pass
+                        tactile = None
 
                 # Update audio only if something changed
                 if cell != last_cell or level != last_level:
@@ -248,6 +339,11 @@ async def run() -> None:
             elif _audio_backend == "tone" and tone is not None:
                 tone.set_level(0)
                 tone.stop()
+        except Exception:
+            pass
+        try:
+            if tactile is not None:
+                tactile.cleanup()
         except Exception:
             pass
         try:
