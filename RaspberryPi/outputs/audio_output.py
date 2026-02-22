@@ -323,6 +323,206 @@ class AudioOutput:
         raise AudioOutputError(f"Unsupported WAV sample width: {sampwidth} bytes")
 
 
+
+
+class LoopingWavOutput:
+    """
+    Loop a WAV continuously and control its intensity in real time.
+
+    - start(path): begins looping in a background thread
+    - set_level(level_0_100, min_intensity=..., intensity_factor=...):
+        maps cell value to gain and updates playback intensity
+    - stop(): stops looping
+
+    Intensity mapping:
+        raw = clamp(level/100, 0..1)
+        gain = clamp(min_intensity + raw * intensity_factor, 0..1)
+
+    Implementation notes:
+    - If an ALSA mixer is available, we also set hardware volume to gain*100 (best effort).
+    - We always apply software gain to the PCM stream (supports 8-bit unsigned and 16-bit signed PCM).
+      For other sample widths, software gain is skipped and only mixer volume is used (if available).
+    """
+
+    def __init__(self, *, device: Optional[str] = None):
+        _require_alsaaudio()
+
+        self.device = device or AUDIO_CONFIG.device
+        # Reuse AudioOutput mixer autodetect logic
+        self._mixer = AudioOutput()._mixer  # type: ignore
+
+        self._lock = threading.RLock()
+        self._stop_event = threading.Event()
+        self._thread: Optional[threading.Thread] = None
+
+        self._wav_path: Optional[str] = None
+        self._gain: float = 0.0
+        self._last_mixer_vol: Optional[int] = None
+
+    def is_running(self) -> bool:
+        with self._lock:
+            return self._thread is not None and self._thread.is_alive()
+
+    def start(self, wav_path: str | Path, *, force: bool = True) -> None:
+        p = Path(wav_path)
+        if not p.exists():
+            raise FileNotFoundError(str(p))
+        if p.suffix.lower() != ".wav":
+            raise ValueError("Only .wav files are supported.")
+
+        if force:
+            self.stop()
+
+        with self._lock:
+            if self.is_running():
+                return
+            self._wav_path = str(p)
+            self._stop_event.clear()
+            self._thread = threading.Thread(
+                target=self._loop_worker,
+                daemon=True,
+                name="LoopingWavOutput",
+            )
+            self._thread.start()
+
+    def stop(self) -> None:
+        with self._lock:
+            t = self._thread
+            if t is None:
+                return
+            self._stop_event.set()
+
+        t.join(timeout=2.0)
+
+        with self._lock:
+            self._thread = None
+            self._stop_event.clear()
+
+    def set_level(self, level: int, *, min_intensity: float = 0.0, intensity_factor: float = 1.0) -> None:
+        """Set current intensity based on a 0..100 score."""
+        try:
+            lv = float(level)
+        except Exception:
+            lv = 0.0
+        if lv < 0.0:
+            lv = 0.0
+        if lv > 100.0:
+            lv = 100.0
+
+        raw = lv / 100.0
+
+        # Clamp params
+        if min_intensity < 0.0:
+            min_intensity = 0.0
+        if min_intensity > 1.0:
+            min_intensity = 1.0
+        if intensity_factor < 0.0:
+            intensity_factor = 0.0
+
+        gain = min_intensity + raw * intensity_factor
+        if gain < 0.0:
+            gain = 0.0
+        if gain > 1.0:
+            gain = 1.0
+
+        with self._lock:
+            self._gain = float(gain)
+
+        # Best-effort: update mixer volume (but avoid spamming if unchanged)
+        vol = int(round(gain * 100))
+        if self._mixer is not None:
+            if self._last_mixer_vol != vol:
+                try:
+                    self._mixer.setvolume(vol)
+                    self._last_mixer_vol = vol
+                except Exception:
+                    # ignore mixer failures; software gain still works for 8/16-bit
+                    pass
+
+    # ---------------------------
+    # Internal: looping playback
+    # ---------------------------
+
+    def _loop_worker(self) -> None:
+        pcm = None
+        try:
+            assert self._wav_path is not None
+            with wave.open(self._wav_path, "rb") as wf:
+                channels = wf.getnchannels()
+                rate = wf.getframerate()
+                sampwidth = wf.getsampwidth()
+                fmt = AudioOutput._alsa_format_from_sampwidth(sampwidth)
+
+                pcm = alsaaudio.PCM(  # type: ignore
+                    type=alsaaudio.PCM_PLAYBACK,  # type: ignore
+                    mode=alsaaudio.PCM_NORMAL,  # type: ignore
+                    device=self.device,
+                )
+                pcm.setchannels(channels)
+                pcm.setrate(rate)
+                pcm.setformat(fmt)
+                pcm.setperiodsize(1024)
+
+                while not self._stop_event.is_set():
+                    data = wf.readframes(1024)
+                    if not data:
+                        wf.rewind()
+                        continue
+
+                    gain = self._gain  # float 0..1
+                    if gain <= 0.0:
+                        # write silence (same frame count)
+                        pcm.write(b"\x00" * len(data))
+                        continue
+
+                    out = self._apply_gain(data, sampwidth, gain)
+                    pcm.write(out)
+
+        except Exception as e:
+            raise AudioOutputError(f"Looping playback failed: {e}") from e
+        finally:
+            try:
+                if pcm is not None:
+                    pcm.close()
+            except Exception:
+                pass
+
+    @staticmethod
+    def _apply_gain(data: bytes, sampwidth: int, gain: float) -> bytes:
+        # Fast paths for common PCM widths
+        if sampwidth == 2:
+            import array
+            a = array.array("h")
+            a.frombytes(data)
+            # Scale + clip
+            for i in range(len(a)):
+                v = int(a[i] * gain)
+                if v > 32767:
+                    v = 32767
+                elif v < -32768:
+                    v = -32768
+                a[i] = v
+            return a.tobytes()
+
+        if sampwidth == 1:
+            import array
+            a = array.array("B")
+            a.frombytes(data)
+            for i in range(len(a)):
+                # unsigned 8-bit centered at 128
+                v = a[i] - 128
+                v = int(v * gain)
+                v += 128
+                if v < 0:
+                    v = 0
+                elif v > 255:
+                    v = 255
+                a[i] = v
+            return a.tobytes()
+
+        # For 24/32-bit, skip software gain (rely on mixer if available)
+        return data
+
 if __name__ == "__main__":
     # Minimal test:
     #   python3 audio_output.py /path/to/test.wav 70

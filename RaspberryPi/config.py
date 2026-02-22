@@ -64,3 +64,35 @@ class AudioConfig:
 MOUSE_CONFIG = MouseConfig()
 WS_CONFIG = WebSocketConfig()
 AUDIO_CONFIG = AudioConfig()
+
+
+@dataclass(frozen=True)
+class ImageProcessingConfig:
+    """
+    Image->grid analysis settings for the on-device cache + feedback mapping.
+
+    - image_path: which image to analyze at startup
+        * can be overridden via env IMAGE_PATH
+    - cache_dir: where JSON cache files are stored
+        * can be overridden via env CACHE_DIR
+    - factor_index: which interest factor's grid map to use (0-based)
+        * can be overridden via env FACTOR_INDEX
+
+    Audio feedback mapping (looping WAV with intensity control):
+    - sound_file_path: WAV file to loop
+        * can be overridden via env SOUND_FILE
+    - min_intensity: minimum gain [0..1] applied before scaling
+        * can be overridden via env MIN_INTENSITY
+    - intensity_factor: multiplier applied to normalized cell value (level/100)
+        * can be overridden via env INTENSITY_FACTOR
+    """
+    image_path: str = "../Computer/images/image3.jpg"
+    cache_dir: str = "cache"
+    factor_index: int = 0
+
+    sound_file_path: str = "test.wav"
+    min_intensity: float = 0.2
+    intensity_factor: float = 1.5
+
+
+IMAGE_CONFIG = ImageProcessingConfig()
