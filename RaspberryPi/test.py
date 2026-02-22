@@ -7,22 +7,22 @@ import json
 
 
 agent = InterestFactorsAgent()
-path = "../Computer/images/image2.jpg"
+path = "../Computer/images/image3.jpg"
 
-"""
+
 try:
     factors = agent.get_interest_factors(path)
     print(json.dumps({"interest_factors": factors}, indent=2, ensure_ascii=False))
 except Exception as e:
     print(f"Failed: {e}")
-"""
+
 
 scorer = GridScoringAgent()
     
 # Simulating pulling one point from your previous InterestFactorsAgent list
 sample_factor = {
-        "title": "Land Elevation Intensity",
-    "description": "Represents the physical height above sea level, indicated by color gradients. Low intensity corresponds to sea level or lowlands (green areas), while high intensity corresponds to mountains (brown and dark yellow areas). This variation can control resistance."
+        "title": "Humidity Percentage Gradient",
+        "description": "Represents the average relative humidity levels across the United States. Low intensity corresponds to areas with very low humidity (e.g., red regions <20%), and high intensity corresponds to areas with very high humidity (e.g., blue regions >80%). This can map to a continuous tone or vibration intensity."
 }
 
 try:
