@@ -4,7 +4,7 @@ import os
 import threading
 from typing import Optional
 
-from PySide6.QtCore import Slot, Qt
+from PySide6.QtCore import Slot, Qt, QObject, Signal, QPointF
 from PySide6.QtGui import QKeySequence, QShortcut
 from PySide6.QtWidgets import QMainWindow, QMessageBox, QSplitter
 
@@ -15,6 +15,13 @@ from models.config import UiConfig
 
 from dotenv import load_dotenv
 load_dotenv()
+
+from network.ws_server import WebSocketPositionServer, WebSocketServerConfig
+
+
+class _WsBridge(QObject):
+    mouse_pos = Signal(float, float, float, float)  # x,y,w,h
+    client_connected = Signal(bool)
 
 
 class MainWindow(QMainWindow):
@@ -59,6 +66,21 @@ class MainWindow(QMainWindow):
 
         self.setCentralWidget(splitter)
 
+        # --- WebSocket server (Pi -> Laptop) ---
+        self._ws_bridge = _WsBridge()
+        self._ws_bridge.mouse_pos.connect(self._on_remote_mouse_pos)
+        self._ws_bridge.client_connected.connect(self._on_ws_client_state)
+
+        ws_host = os.getenv("WS_HOST", "0.0.0.0")
+        ws_port = int(os.getenv("WS_PORT", "8765"))
+
+        self._ws_server = WebSocketPositionServer(
+            WebSocketServerConfig(host=ws_host, port=ws_port),
+            on_mouse_pos=lambda x, y, w, h: self._ws_bridge.mouse_pos.emit(x, y, w, h),
+            on_client_state=lambda connected: self._ws_bridge.client_connected.emit(bool(connected)),
+        )
+        self._ws_server.start()
+
         # Wiring: image + overlays
         self.controller.image_changed.connect(self.canvas.set_image)
         self.controller.point_changed.connect(self.canvas.set_point)
@@ -89,6 +111,32 @@ class MainWindow(QMainWindow):
 
         # Optional: toggle TTS quickly
         QShortcut(QKeySequence("Ctrl+T"), self, activated=self._toggle_tts)
+
+    # ------------------------
+    # WebSocket (Pi -> Laptop)
+    # ------------------------
+    @Slot(bool)
+    def _on_ws_client_state(self, connected: bool) -> None:
+        state = "connected" if connected else "disconnected"
+        self.statusBar().showMessage(f"WebSocket client: {state}")
+
+    @Slot(float, float, float, float)
+    def _on_remote_mouse_pos(self, x: float, y: float, w: float, h: float) -> None:
+        """Receive Pi absolute mouse position in Pi coordinate space (w x h) and
+        map it into the current image scene coordinates.
+
+        The ImageCanvas expects points in *image coordinates* (pixmap bounding rect).
+        """
+        rect = self.canvas.sceneRect()
+        if rect.isNull() or w <= 0 or h <= 0:
+            return
+
+        nx = max(0.0, min(1.0, float(x) / float(w)))
+        ny = max(0.0, min(1.0, float(y) / float(h)))
+
+        px = rect.left() + nx * rect.width()
+        py = rect.top() + ny * rect.height()
+        self.controller.update_point(QPointF(px, py))
 
     # ------------------------
     # ElevenLabs + Windows audio (pygame) plumbing
@@ -283,3 +331,12 @@ class MainWindow(QMainWindow):
         x, y = offsets[row % len(offsets)] if row >= 0 else (60, 60)
         from PySide6.QtCore import QPointF
         self.controller.update_point(QPointF(x, y))
+
+    def closeEvent(self, event):
+        """Ensure background services stop cleanly on app exit."""
+        try:
+            if hasattr(self, "_ws_server") and self._ws_server is not None:
+                self._ws_server.stop()
+        except Exception:
+            pass
+        return super().closeEvent(event)
