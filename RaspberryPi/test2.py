@@ -5,31 +5,36 @@ import time
 # from src.camera.pwm_controller import PWMController
 from output.pwm_controller import PWMController
 from output.servo_controller import ServoController
+from output.tactile_output import TactileOutput
+from output.tactile_output import TactileServoConfig
 
-def main():
-    # Most setups after dtoverlay expose it as pwmchip0, channel 0
-    pwm = PWMController(chip=0, channel=0)
+# Demo usage
+t = TactileOutput(
+    TactileServoConfig(
+        chip=0,
+        channel=0,
+        not_touching_angle=50,
+        touching_angle=130,
+        max_touching_angle=180,
+    )
+)
 
-    servo = ServoController(pwm, min_pulse_us=500, max_pulse_us=2500, max_angle=180)
+try:
+    t.initialize()
+    print("Initialized. release() -> touch(0.2) -> touch(1.0) -> release()")
 
-    if not servo.initialize():
-        raise RuntimeError("Servo init failed. Check dtoverlay + /sys/class/pwm permissions + chip/channel.")
+    t.release()
+    time.sleep(1)
 
-    print("Servo initialized on GPIO12 via sysfs PWM.")
+    t.touch(0.2)
+    time.sleep(2)
 
-    try:
-        for angle in [0, 90, 180, 90]:
-            print("Angle:", angle)
-            servo.set_angle(angle)
-            time.sleep(1.0)
+    t.touch(1.0)
+    time.sleep(2)
 
-        print("Sweeping...")
-        servo.sweep(step=10, delay=0.05)
+    t.release()
+    time.sleep(1)
 
-    finally:
-        servo.stop()
-        pwm.cleanup()
-        print("Clean exit.")
-
-if __name__ == "__main__":
-    main()
+finally:
+    t.cleanup()
+    print("Clean exit.")
