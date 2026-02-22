@@ -1,5 +1,5 @@
 import time
-from output.pwm_controller import PWMController
+from outputs.pwm_controller import PWMController
 
 
 class ServoController:

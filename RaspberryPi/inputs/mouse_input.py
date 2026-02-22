@@ -113,8 +113,19 @@ class MouseInput:
                 time.sleep(0.25)
 
     def get_absolute_position(self) -> Tuple[int, int]:
+        """
+        Returns the current absolute position (x,y), with optional 180° rotation
+        applied if cfg.rotate_180 is True.
+        """
         with self._lock:
-            return self._x, self._y
+            x, y = self._x, self._y
+
+        if getattr(self.cfg, "rotate_180", False):
+            # 180° rotation => invert both axes around the max bounds
+            x = self.cfg.max_x - x
+            y = self.cfg.max_y - y
+
+        return int(x), int(y)
 
     def is_moved(self) -> bool:
         """

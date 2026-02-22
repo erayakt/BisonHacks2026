@@ -11,8 +11,8 @@ Behavior:
 from dataclasses import dataclass
 import time
 
-from output.pwm_controller import PWMController
-from output.servo_controller import ServoController
+from outputs.pwm_controller import PWMController
+from outputs.servo_controller import ServoController
 
 
 @dataclass(frozen=True)
