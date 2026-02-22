@@ -21,14 +21,31 @@ def main() -> int:
     )
 
     app = QApplication(sys.argv)
+
     app.setStyleSheet("""
-        QListWidget { font-size: 18px; padding: 8px; }
-        QListWidget::item { padding: 10px; }
-        QListWidget::item:selected { border-radius: 8px; }
+        QListWidget { 
+            font-size: 18px; 
+            padding: 8px; 
+            background: #111; 
+            color: white;
+            border: 1px solid #333;
+            border-radius: 10px;
+        }
+        QListWidget::item { padding: 10px; border-radius: 8px; }
+        QListWidget[mode="choosing"]::item:selected { 
+            background: #2a4; 
+            color: black;
+            border: 2px solid #7f7;
+        }
+        QListWidget[mode="running"]::item:selected { 
+            background: #333; 
+            color: white; 
+            border: 1px solid #666;
+        }
     """)
 
     controller = AppController(state)
-    window = MainWindow(controller, ui=UiConfig())
+    window = MainWindow(controller, ui=UiConfig(window_title="Grid UI Prototype (Space to choose)"))
     window.show()
 
     return app.exec()
