@@ -91,6 +91,7 @@ class InterestFactorsAgent(ImageAgent):
             }
         """
         text = self.analyze_image(image_path, custom_prompt=custom_prompt)
+    
 
         if isinstance(text, str) and text.startswith("Error:"):
             raise FileNotFoundError(text)
