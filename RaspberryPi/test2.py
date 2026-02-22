@@ -3,10 +3,10 @@ import time
 
 # IMPORTANT: adjust this import to your real path
 # from src.camera.pwm_controller import PWMController
-from output.pwm_controller import PWMController
-from output.servo_controller import ServoController
-from output.tactile_output import TactileOutput
-from output.tactile_output import TactileServoConfig
+from outputs.pwm_controller import PWMController
+from outputs.servo_controller import ServoController
+from outputs.tactile_output import TactileOutput
+from outputs.tactile_output import TactileServoConfig
 
 # Demo usage
 t = TactileOutput(

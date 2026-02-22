@@ -1,6 +1,6 @@
 import time
 
-from mouse_input import MouseInput
+from inputs.mouse_input import MouseInput
 
 
 def main():
