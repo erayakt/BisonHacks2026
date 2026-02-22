@@ -2,3 +2,6 @@ PySide6
 websockets>=12.0
 python-dotenv>=1.0.0
 pygame>=2.5.0
+google-genai>=0.3.0
+Pillow>=10.0.0
+elevenlabs>=1.0.0

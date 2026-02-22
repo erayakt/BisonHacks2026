@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import os
 import threading
+import tempfile
+from pathlib import Path
 from typing import Optional
 
 from PySide6.QtCore import Slot, Qt, QObject, Signal, QPointF
@@ -39,6 +41,10 @@ class MainWindow(QMainWindow):
         self._eleven_client = None  # lazy init
         self._pygame_ready = False
         self._last_choosing_state: Optional[bool] = None  # avoid double MODE speech
+
+
+        # --- LLM (Gemini) image-region describer ---
+        self._llm_agent = None  # lazy init
 
         # Optional: configure voice/model via env
         self._eleven_voice_id = os.getenv("ELEVENLABS_VOICE_ID", "xctasy8XvGp2cVO9HL9k")
@@ -331,6 +337,75 @@ class MainWindow(QMainWindow):
         x, y = offsets[row % len(offsets)] if row >= 0 else (60, 60)
         from PySide6.QtCore import QPointF
         self.controller.update_point(QPointF(x, y))
+
+
+    # ------------------------
+    # LLM crop description (Shift)
+    # ------------------------
+    def _get_llm_agent(self):
+        if self._llm_agent is not None:
+            return self._llm_agent
+        try:
+            from agents.llm_agent import LlmAgent, LlmAgentConfig
+            # You can override model/prompt via env if desired
+            model_name = os.getenv("GEMINI_MODEL_NAME", "gemini-2.5-flash")
+            prompt = os.getenv(
+                "GEMINI_CROP_PROMPT",
+                "Describe this cropped image region in 2 to 4 short sentences. "
+                "Focus on what is visually present and any important textures/patterns.",
+            )
+            self._llm_agent = LlmAgent(LlmAgentConfig(model_name=model_name, default_prompt=prompt))
+            return self._llm_agent
+        except Exception as e:
+            print(f"[LLM] Disabled (reason: {e})")
+            return None
+
+    def _describe_current_crop(self) -> None:
+        """Crop 256x256 around the marker and speak a short description."""
+        crop = self.canvas.crop_around_point(size=256)
+        if crop is None:
+            self.statusBar().showMessage("No crop available yet.")
+            return
+
+        # Save to a temp PNG (Gemini SDK + PIL are simplest with a file path)
+        try:
+            tmp_dir = Path(tempfile.gettempdir())
+            out_path = tmp_dir / "crop_256.png"
+            crop.save(str(out_path), "PNG")
+        except Exception as e:
+            print(f"[LLM] Failed to save crop: {e}")
+            return
+
+        agent = self._get_llm_agent()
+        if agent is None:
+            self.statusBar().showMessage("LLM not configured (check GOOGLE_API_KEY + deps).")
+            return
+
+        def _worker():
+            try:
+                text = agent.describe_image(str(out_path))
+                if text:
+                    print(f"[LLM] {text}")
+                    self.statusBar().showMessage("LLM: described crop")
+                    self.speak(text)
+                else:
+                    self.statusBar().showMessage("LLM returned empty description.")
+            except Exception as e:
+                print(f"[LLM] Error: {e}")
+                self.statusBar().showMessage("LLM error (see console).")
+
+        threading.Thread(target=_worker, daemon=True).start()
+
+    def keyPressEvent(self, event):
+        # SHIFT: describe cropped region around the marker
+        try:
+            if event.key() == Qt.Key.Key_Shift:
+                self._describe_current_crop()
+                event.accept()
+                return
+        except Exception:
+            pass
+        return super().keyPressEvent(event)
 
     def closeEvent(self, event):
         """Ensure background services stop cleanly on app exit."""

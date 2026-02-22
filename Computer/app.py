@@ -12,11 +12,11 @@ from models.state import AppState
 
 def main() -> int:
     # CHANGE THIS:
-    IMAGE_PATH = r"images/image1.jpg"
+    IMAGE_PATH = r"images/image3.jpg"
 
     state = AppState(
         image_path=IMAGE_PATH,
-        choices=["Apple", "River", "Triangle", "Guitar"],
+        choices=["Humidity Intensity Gradient", "Color Saturation Variation", "Contour Line Density"],
         grid=GridConfig(rows=12, cols=12),
     )
 
@@ -45,7 +45,7 @@ def main() -> int:
     """)
 
     controller = AppController(state)
-    window = MainWindow(controller, ui=UiConfig(window_title="Grid UI Prototype (Space to choose)"))
+    window = MainWindow(controller, ui=UiConfig(window_title="VisionMouse"))
     window.show()
 
     return app.exec()
